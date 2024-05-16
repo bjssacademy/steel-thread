@@ -428,6 +428,9 @@ Start by running locally.
 
 We're going to have problems switching our front end code to either user `localhost` or our remote URL. Refactor the code so that it uses environment variables, like we have done with our backend code.
 
+## Task 3
+
+Deploy your front-end code as an Azure static web app - https://vitejs.dev/guide/static-deploy.html#azure-static-web-apps
 
 ---
 
