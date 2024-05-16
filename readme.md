@@ -432,6 +432,10 @@ We're going to have problems switching our front end code to either user `localh
 
 Deploy your front-end code as an Azure static web app - https://vitejs.dev/guide/static-deploy.html#azure-static-web-apps
 
+## Task 4
+
+Create a pipeline to deploy your app, rather than from VS Code.
+
 ---
 
 ## BJSS Course - React/Redux
