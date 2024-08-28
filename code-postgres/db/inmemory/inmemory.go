@@ -1,4 +1,4 @@
-package db
+package inmemory
 
 import (
 	"acme/model"
@@ -6,11 +6,17 @@ import (
 	"slices"
 )
 
+type InMemoryRepository struct{}
+
 var count int = 3
 var users []model.User
 
-func init() {
-	// Initialize the in-memory database with some sample data
+func NewInMemoryRepository() *InMemoryRepository {
+    InitDB() // Initialize the in-memory database with sample data
+    return &InMemoryRepository{}
+}
+
+func InitDB() {
 	users = []model.User{
 		{ID: 1, Name: "User 1"},
 		{ID: 2, Name: "User 2"},
@@ -18,11 +24,11 @@ func init() {
 	}
 }
 
-func GetUsers() ([]model.User, error) {
+func (repo *InMemoryRepository) GetUsers() ([]model.User, error) {
 	return users, nil
 }
 
-func AddUser(user model.User) (id int, err error) {
+func (repo *InMemoryRepository) AddUser(user model.User) (id int, err error) {
 	count++
 	user.ID = count
 
@@ -31,7 +37,7 @@ func AddUser(user model.User) (id int, err error) {
 	return count, nil
 }
 
-func GetUser(id int) (model.User, error) {
+func (repo *InMemoryRepository) GetUser(id int) (model.User, error) {
 	var user model.User
 
 	for _, user := range users {
@@ -44,7 +50,7 @@ func GetUser(id int) (model.User, error) {
 
 }
 
-func DeleteUser(id int) error {
+func (repo *InMemoryRepository) DeleteUser(id int) error {
 
 	for index, user := range users {
 		if user.ID == id {
@@ -61,7 +67,7 @@ func DeleteUser(id int) error {
 WITHOUT using pointers
 */
 
-func UpdateUser(id int, updatedUser model.User) (model.User, error) {
+func (repo *InMemoryRepository) UpdateUser(id int, updatedUser *model.User) (model.User, error) {
 
 	for index, user := range users {
 		if user.ID == id {
@@ -72,20 +78,10 @@ func UpdateUser(id int, updatedUser model.User) (model.User, error) {
 
 	return model.User{}, errors.New("User id not found to update.")
 
-}
 
-/* USING Pointers
-func UpdateUser(id int, updatedUser model.User) *model.User {
-
-	for index, user := range users {
-		if user.ID == id {
-			user := &users[index]
-			user.Name = updatedUser.Name
-			return user
-		}
-	}
-
-	return &User{}
 
 }
-*/
+
+func (repo *InMemoryRepository) Close() {
+
+}

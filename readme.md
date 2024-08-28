@@ -50,19 +50,22 @@ So we need a remote Postgres database.
 
 > If you don't have the code from previous tasks, you can use that in the [code-postgres](/code-postgres/) folder.
 
-You'll need to update your connection string in `main.go`:
+You'll need to update your `.env` file:
 
-```go
-//connectionString := "user=postgres dbname=acme password=YOURPASSWORD host=localhost sslmode=disable host=host.docker.internal"
-connectionString := "user=acmeadmin dbname=TEAMNAME-db password=PASSWORD host=acme-db.postgres.database.azure.com port=5432 sslmode=require"
+```bash
+DBTYPE="postgres"
+DBHOST="acme-db.postgres.database.azure.com"
+DBNAME="acme"
+DBUSER="postgres"
+DBPASSWORD="THEPASSWORD"
+DBSSLMODE="disable"
 ```
 
-> Remember to replace TEAMNAME and PASSWORD with the relevant details.
+**AAsk your tutor for the password**
 
 :exclamation: The Postgres server doesn't allow any old connection by default. You can either allow all public access (not recommended) or add your current IP address to the allow list. Click on the lin `+ Add current client IP address` to add your IP address to the allow list if it's not there.
 
 ![alt text](images/allowlocal.PNG)
-
 
 When you run your code now, it will connect to the remote database and run any migrations you have.
 
@@ -89,140 +92,11 @@ COPY --from=build /app/migrations /app/migrations
 EXPOSE 8080
 CMD ["./main"]
 ```
-
-## Environment Variables
-
-Okay, so that's all good. But if we not want to connect to our local DB for development, we've got to change the code - and we've got to remember to change the code before we push it to prod, otherwise it won't work.
-
-In Go, you can manage different connection strings based on the environment (development, testing, production, etc.) by using *environment variables*. This allows us to change the configuration without modifying the code.
-
-> This is also good security practice, as we will no longer have passwords or usernames in our code or repository!
-
----
-
-### Unix-like Systems (Linux, macOS)
-#### Temporary Session Variables
-
-```sh
-export DEV_DB_CONN_STRING="user:password@/dev_db"
-export TEST_DB_CONN_STRING="user:password@/test_db"
-export PROD_DB_CONN_STRING="user:password@/prod_db"
-export APP_ENV="development"
-```
-
-These variables will be available only for the *current terminal session*. They will be lost when you close the terminal.
-
-#### Persistent Environment Variables
-To make environment variables persistent across sessions, you typically add them to your shell's configuration file (e.g., `.bashrc`, `.bash_profile`, `.zshrc`).
-
-##### Bash (~/.bashrc or ~/.bash_profile):
-
-```sh
-export DEV_DB_CONN_STRING="user:password@/dev_db"
-export TEST_DB_CONN_STRING="user:password@/test_db"
-export PROD_DB_CONN_STRING="user:password@/prod_db"
-export APP_ENV="development"
-```
-
-##### Zsh (~/.zshrc):
-
-```sh
-export DEV_DB_CONN_STRING="user:password@/dev_db"
-export TEST_DB_CONN_STRING="user:password@/test_db"
-export PROD_DB_CONN_STRING="user:password@/prod_db"
-export APP_ENV="development"
-```
-
-After adding the variables, you need to source the file to apply the changes.
-
-```sh
-source ~/.bashrc  # or ~/.bash_profile or ~/.zshrc
-```
-
-### Windows
-#### Temporary Session Variables
-
-##### Command Prompt
-
-```cmd
-set DEV_DB_CONN_STRING=user:password@/dev_db
-set TEST_DB_CONN_STRING=user:password@/test_db
-set PROD_DB_CONN_STRING=user:password@/prod_db
-set APP_ENV=development
-```
-
-##### PowerShell
-
-```powershell
-$env:DEV_DB_CONN_STRING = "user:password@/dev_db"
-$env:TEST_DB_CONN_STRING = "user:password@/test_db"
-$env:PROD_DB_CONN_STRING = "user:password@/prod_db"
-$env:APP_ENV = "development"
-```
-
-These variables will be available only for the current Command Prompt or PowerShell session.
-
-#### Persistent Environment Variables
-To set environment variables permanently using PowerShell, you can use the `setx` command. Note that `setx` writes to the registry and requires reopening the terminal to reflect changes.
-
-```powershell
-setx DEV_DB_CONN_STRING "user:password@/dev_db"
-setx TEST_DB_CONN_STRING "user:password@/test_db"
-setx PROD_DB_CONN_STRING "user:password@/prod_db"
-setx APP_ENV "development"
-```
----
-
-## Using our environment variables
-
-I'm on Windows, so I'm going to set my environment variables using PowerShell.
-
-```powershell
-setx DEV_DB_CONN_STRING "user=postgres dbname=acme password=YOURPASSWORD host=localhost sslmode=disable"
-setx PROD_DB_CONN_STRING "user=acmeadmin dbname=TEAMNAME-db password=YOURPASSWORD host=acme-db.postgres.database.azure.com port=5432 sslmode=require"
-setx APP_ENV "development"
-```
-
-> :exclamation: WINDOWS :exclamation: YOU WILL NEED TO RESTART ANY VS CODE INSTANCES BEFORE YOU WILL BE ABLE TO READ THE ENVIRONMENT VARIABLES!
-
-Now we need to update our Go code. Import the `os` package, and add the following function to `main.go`:
-
-```go
-func getConnectionString() (string, error) {
-    env := os.Getenv("APP_ENV")
-    var connString string
-
-    switch env {
-    case "development":
-        connString = os.Getenv("DEV_DB_CONN_STRING")
-    case "production":
-        connString = os.Getenv("PROD_DB_CONN_STRING")
-    default:
-        return connString, errors.New("set APP_ENV, DEV_DB_CONN_STRING, and PROD_DB_CONN_STRING")
-    }
-    return connString, nil
-}
-```
-This function will check that we have the environment variables set, and if not error.
-
-Now we need to update our code in the main function, so we can get the connection string:
-
-
-```go
-connectionString, connStrErr := getConnectionString()
-if connStrErr != nil {
-    fmt.Println(connStrErr.Error())
-    return
-}
-```
-
-Now you can save you file and run it, and it will connect to your local database!
-
 ---
 
 ## Dockerfile ENV variables
 
-Because we're creating a docker image, we would also update the environment variables inside that image...
+Because we're creating a docker image, we would also update the environment variables inside that image, for example:
 
 ```docker
 # Set environment variables
@@ -250,7 +124,7 @@ Of course, that doesn't help us on our production instance. We're going to need 
 1. Go to your Azure DevOps project.
 2. Navigate to Pipelines > Library.
 3. Create a new Variable Group (eg `atari-app-variables`).
-4. Add your secrets (PROD_DB_CONN_STRING, APP_ENV) 
+4. Add your environment variables (ask your tutor for the password)
 
 ![alt text](images/appvars.PNG)
 
@@ -293,8 +167,13 @@ Update the Build stage to add the `env` step:
         tags: |
           $(tag)
       env:
-        PROD_DB_CONN_STRING: $(PROD_DB_CONN_STRING)
-        APP_ENV: $(APP_ENV)
+        DBTYPE: $(DBTYPE)
+        DBHOST: $(DBHOST)
+        DBNAME: $(DBNAME)
+        DBUSER: $(DBUSER)
+        DBPASSWORD: $(DBPASSWORD)
+        DBSSLMODE: $(DBSSSLMODE)
+
 ```
 
 Update the Deploy stage to add the `env` step:
@@ -314,8 +193,12 @@ Update the Deploy stage to add the `env` step:
         appName: $(appName)
         containers: $(containerRegistry)/$(imageRepository):$(tag)
       env:
-        PROD_DB_CONN_STRING: $(PROD_DB_CONN_STRING)
-        APP_ENV: $(APP_ENV)
+        DBTYPE: $(DBTYPE)
+        DBHOST: $(DBHOST)
+        DBNAME: $(DBNAME)
+        DBUSER: $(DBUSER)
+        DBPASSWORD: $(DBPASSWORD)
+        DBSSLMODE: $(DBSSSLMODE)
 ```
 
 The first time you run this new pipeline it may require permission:

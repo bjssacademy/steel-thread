@@ -1,16 +1,19 @@
-FROM golang:1.22.3-alpine3.19
-
-RUN mkdir /app
-
-ADD . /app
-
+FROM golang:1.22.3-alpine3.19 AS build
 WORKDIR /app
-
-ENV GOOSE_DRIVER=postgres
-ENV GOOSE_DBSTRING=user=postgres password=YOURPASSWORD dbname=acme sslmode=disable host=host.docker.internal
-
-EXPOSE 8080
-
+COPY . .
+COPY go.mod ./
+RUN go mod download && go mod verify
 RUN go build -o main .
 
-CMD ["/app/main"]
+# Migrations stage
+#FROM alpine:3.14 AS migrations
+WORKDIR /app
+COPY migrations /app/migrations
+
+# Final stage
+FROM scratch
+WORKDIR /app
+COPY --from=build /app/main .
+COPY --from=build /app/migrations /app/migrations
+EXPOSE 8080
+CMD ["./main"]

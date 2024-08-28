@@ -2,11 +2,13 @@ package main
 
 import (
 	"acme/api"
-	"acme/postgres"
-	"errors"
+	"acme/config"
+	"acme/db"
+	"acme/db/inmemory"
+	"acme/db/postgres"
+	"acme/service"
 	"fmt"
 	"net/http"
-	"os"
 )
 
 func CorsMiddleware(next http.Handler) http.Handler {
@@ -17,54 +19,53 @@ func CorsMiddleware(next http.Handler) http.Handler {
     })
 }
 
-func rootHandler(writer http.ResponseWriter, request *http.Request) {
-    fmt.Fprintf(writer, "Hello, World!")
-}
-
-func getConnectionString() (string, error) {
-    env := os.Getenv("APP_ENV")
-    var connString string
-
-    switch env {
-    case "development":
-        connString = os.Getenv("DEV_DB_CONN_STRING")
-    case "production":
-        connString = os.Getenv("PROD_DB_CONN_STRING")
-    default:
-        return connString, errors.New("set APP_ENV, DEV_DB_CONN_STRING, and PROD_DB_CONN_STRING")
-    }
-    return connString, nil
-}
-
 func main() {
+    // Load configuration
+    config := config.LoadDatabaseConfig()
 
-    // Initialize the database connection
-    connectionString, connStrErr := getConnectionString()
-    if connStrErr != nil {
-        fmt.Println(connStrErr.Error())
-        return
-    }
-
-    if err := postgres.InitDB(connectionString); err != nil {
+    // Initialize database
+    dbRepo, err := initializeDatabase(config)
+    if err != nil {
         fmt.Println("Error initializing the database:", err)
         return
     }
-    defer postgres.DB.Close()
+    defer dbRepo.Close()
 
+    // Initialize services
+    userService := service.NewUserService(dbRepo)
+    userAPI := api.NewUserAPI(userService)
+
+    // Initialize router
     router := http.NewServeMux()
 
+    // Add routes
     router.HandleFunc("GET /", rootHandler)
-    router.HandleFunc("GET /api/users", api.GetUsers)
-    router.HandleFunc("POST /api/users", api.CreateUser)
-    router.HandleFunc("GET /api/users/{id}", api.GetSingleUser)
-    router.HandleFunc("DELETE /api/users/{id}", api.DeleteSingleUser)
-    router.HandleFunc("PUT /api/users/{id}", api.UpdateSingleUser)
-    
+    router.HandleFunc("GET /api/users", userAPI.GetUsers)
+    router.HandleFunc("POST /api/users", userAPI.CreateUser)
+    router.HandleFunc("GET /api/users/{id}", userAPI.GetSingleUser)
+    router.HandleFunc("DELETE /api/users/{id}", userAPI.DeleteSingleUser)
+    router.HandleFunc("PUT /api/users/{id}", userAPI.UpdateSingleUser)
+
     // Starting the HTTP server on port 8080
     fmt.Println("Server listening on port 8080...")
-    err := http.ListenAndServe(":8080", router)
+    err = http.ListenAndServe(":8080", CorsMiddleware(router))
     if err != nil {
         fmt.Println("Error starting server:", err)
     }
 }
 
+func initializeDatabase(config config.DatabaseConfig) (db.Repository, error) {
+    switch config.Type {
+    case "postgres":
+        connectionString := fmt.Sprintf("user=%s dbname=%s password=%s host=%s sslmode=%s", config.User, config.DBName, config.Password, config.Host, config.SSLMode)
+        return postgres.NewPostgresRepository(connectionString)
+    case "inmemory":
+        return inmemory.NewInMemoryRepository(), nil
+    default:
+        return nil, fmt.Errorf("unsupported database type: %s", config.Type)
+    }
+}
+
+func rootHandler(writer http.ResponseWriter, request *http.Request) {
+    fmt.Fprintf(writer, "Hello, World!")
+}
