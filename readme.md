@@ -58,7 +58,7 @@ DBHOST="YOURDBNAME.postgres.database.azure.com"
 DBNAME="acme"
 DBUSER="acmeadmin"
 DBPASSWORD="THEPASSWORD"
-DBSSLMODE="disable"
+DBSSLMODE="require"
 ```
 
 **Ask your tutor for the DBHOST and password**
