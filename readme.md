@@ -56,7 +56,7 @@ You'll need to update your `.env` file:
 DBTYPE="postgres"
 DBHOST="YOURDBNAME.postgres.database.azure.com"
 DBNAME="acme"
-DBUSER="postgres"
+DBUSER="acmeadmin"
 DBPASSWORD="THEPASSWORD"
 DBSSLMODE="disable"
 ```
