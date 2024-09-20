@@ -80,7 +80,7 @@ COPY . .
 COPY go.mod ./
 RUN go mod download && go mod verify
 RUN go build -o main .
-s
+
 WORKDIR /app
 COPY migrations /app/migrations
 
