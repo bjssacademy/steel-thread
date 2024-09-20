@@ -46,6 +46,8 @@ So we need a remote Postgres database.
 >
 > If you are not on the BJSS course, check the Azure guide [here](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/quickstart-create-server-portal).
 
+*You will also need a deployed App Service to deploy your container to! If you don't have one already, check out [this guide on creating a web app with a container](https://github.com/bjssacademy/go-containerization?tab=readme-ov-file#deploying-our-app).*
+
 ### Connect to our remote DB
 
 > If you don't have the code from previous tasks, you can use that in the [code-postgres](/code-postgres/) folder.
