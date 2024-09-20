@@ -182,25 +182,20 @@ Update the Deploy stage to add the `env` step:
 
 ```yaml
 - stage: Deploy
-  displayName: 'Deploy to Azure Web App'
+  displayName: Deploy to Azure Web App
   dependsOn: Test
   jobs:
-  - job: Deploy
-    displayName: 'Deploy Azure Web App'
-    steps:
-    - task: AzureWebAppContainer@1
-      displayName: 'Azure Web App on Container Deploy'
-      inputs:
-        azureSubscription: $(azureSubscription)
-        appName: $(appName)
-        containers: $(containerRegistry)/$(imageRepository):$(tag)
-      env:
-        DBTYPE: $(DBTYPE)
-        DBHOST: $(DBHOST)
-        DBNAME: $(DBNAME)
-        DBUSER: $(DBUSER)
-        DBPASSWORD: $(DBPASSWORD)
-        DBSSLMODE: $(DBSSSLMODE)
+    - job: Deploy
+      displayName: Deploy Azure Web App
+      steps:
+        - task: AzureWebAppContainer@1
+          displayName: Azure Web App on Container Deploy
+          inputs:
+            azureSubscription: $(azureSubscription)
+            appName: $(appName)
+            containers: $(containerRegistry)/$(imageRepository):$(tag)
+            appSettings: -DBTYPE $(DBTYPE) -DBHOST $(DBHOST) -DBNAME $(DBNAME) -DBUSER
+              $(DBUSER) -DBPASSWORD $(DBPASSWORD) -DBSSLMODE $(DBSSLMODE)
 ```
 
 The first time you run this new pipeline it may require permission:
