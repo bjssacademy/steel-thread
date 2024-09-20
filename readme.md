@@ -293,6 +293,8 @@ Now when you run your app locally, you will see the users returned
 
 Start by running locally. 
 
+> NOTE: If you are working in a team, you'll need to at this point decide how you are going to work together. The best way to do this would be to pick one person's codebase to be the *team* codebase and all branch off that, otherwise you'll forever be falling over each other creating slightly different tables.
+
 ### Task 1
 
 1. Create the products table if you have not already via a migration. It will need to have the columns `id`, `name`, `price`, and `stock_count`.
