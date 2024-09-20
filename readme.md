@@ -74,7 +74,7 @@ When you run your code now, it will connect to the remote database and run any m
 To enable migrations to run from our image, we have to copy the `migrations` folder in our Dockerfile. Update your Dockerfile to do so:
 
 ```docker
-FROM golang:1.22.3-alpine3.19 AS build
+FROM golang:1.23.1-alpine3.19 AS build
 WORKDIR /app
 COPY . .
 COPY go.mod ./
