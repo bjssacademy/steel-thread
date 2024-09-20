@@ -1,0 +1,82 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+trigger:
+- main
+resources:
+- repo: self
+pool:
+  vmImage: ubuntu-latest
+stages:
+- stage: Build
+  displayName: 'Build and push Docker image'
+  jobs:
+  - job: Build
+    displayName: 'Build'
+    steps:
+    - task: Docker@2
+      inputs:
+        command: 'buildAndPush'
+        repository: $(imageRepository)
+        dockerfile: $(dockerfilePath)
+        containerRegistry: $(dockerRegistryServiceConnection)
+        tags: |
+          $(tag)
+      env:
+        DBTYPE: $(DBTYPE)
+        DBHOST: $(DBHOST)
+        DBNAME: $(DBNAME)
+        DBUSER: $(DBUSER)
+        DBPASSWORD: $(DBPASSWORD)
+        DBSSLMODE: $(DBSSSLMODE)
+# - stage: Test
+#   displayName: 'Run tests'
+#   dependsOn: Build
+#   jobs:
+#   - job: Test
+#     displayName: 'Run tests'
+#     pool:
+#       vmImage: 'ubuntu-latest'
+#     steps:
+#     - script: |
+#         echo "Running tests..."
+#         # Run the Go tests from the project directory
+#         go test ./...
+#       displayName: 'Run tests'
+- stage: Deploy
+  displayName: 'Deploy to Azure Web App'
+  # dependsOn: Test
+  jobs:
+  - job: Deploy
+    displayName: 'Deploy Azure Web App'
+    steps:
+    - task: AzureWebAppContainer@1
+      displayName: 'Azure Web App on Container Deploy'
+      inputs:
+        azureSubscription: $(azureSubscription)
+        appName: $(appName)
+        containers: $(containerRegistry)/$(imageRepository):$(tag)
+      env:
+        DBTYPE: $(DBTYPE)
+        DBHOST: $(DBHOST)
+        DBNAME: $(DBNAME)
+        DBUSER: $(DBUSER)
+        DBPASSWORD: $(DBPASSWORD)
+        DBSSLMODE: $(DBSSSLMODE)
+variables:
+# - group: sinclair-app-variables
+- name: dockerRegistryServiceConnection
+  value: 'Docker ACR'
+- name:  imageRepository
+  value: 'atari/samlogan-goapp'
+- name: containerRegistry
+  value: 'acrbjssacademy.azurecr.io'
+- name: dockerfilePath
+  value: '$(Build.SourcesDirectory)/Dockerfile'
+- name: tag
+  value: 'latest'
+- name: azureSubscription
+  value: 'Azure RM'
+- name: appName
+  value: 'acr-sam-logan'
