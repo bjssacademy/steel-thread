@@ -54,14 +54,14 @@ You'll need to update your `.env` file:
 
 ```bash
 DBTYPE="postgres"
-DBHOST="YOURDBNAME.postgres.database.azure.com"
-DBNAME="acme"
+DBHOST="acme-db.postgres.database.azure.com"
+DBNAME="YOURDBNAME"
 DBUSER="acmeadmin"
 DBPASSWORD="THEPASSWORD"
 DBSSLMODE="require"
 ```
 
-**Ask your tutor for the DBHOST and password**
+**Ask your tutor for the DB name and password**
 
 :exclamation: The Postgres server doesn't allow any old connection by default. You can either allow all public access (not recommended) or add your current IP address to the allow list. Click on the lin `+ Add current client IP address` to add your IP address to the allow list if it's not there.
 
