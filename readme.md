@@ -52,7 +52,7 @@ So we need a remote Postgres database.
 
 > If you don't have the code from previous tasks, you can use that in the [code-postgres](/code-postgres/) folder.
 >
-> Check out the [readme](./code-postgres/readme.md) on ho to set it up!
+> Check out the [readme](./code-postgres/readme.md) on how to set it up!
 
 You'll need to update your `.env` file:
 
@@ -100,6 +100,8 @@ CMD ["./main"]
 
 ## Dockerfile ENV variables
 
+> Note, this section is for info only, don't run the commands or change your Dockerfile
+
 Because we're creating a docker image, we would also update the environment variables inside that image, for example:
 
 ```docker
@@ -120,6 +122,8 @@ docker run -e DEV_DB_CONN_STRING="user:password@/dev_db" -e TEST_DB_CONN_STRING=
 Which is a bit of a pain, but since we don't need the image locally we can work without the container. However, we can set env cars using Docker Desktop:
 
 ![alt text](images/docker-env-var.PNG)
+
+---
 
 ## Pipeline Variables
 
