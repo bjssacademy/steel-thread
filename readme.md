@@ -46,6 +46,8 @@ So we need a remote Postgres database.
 >
 > If you are not on the BJSS course, check the Azure guide [here](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/quickstart-create-server-portal).
 
+*You will also need a deployed App Service to deploy your container to! If you don't have one already, check out [this guide on creating a web app with a container](https://github.com/bjssacademy/go-containerization?tab=readme-ov-file#deploying-our-app).*
+
 ### Connect to our remote DB
 
 > If you don't have the code from previous tasks, you can use that in the [code-postgres](/code-postgres/) folder.
@@ -57,13 +59,13 @@ You'll need to update your `.env` file:
 ```bash
 DBTYPE="postgres"
 DBHOST="acme-db.postgres.database.azure.com"
-DBNAME="acme"
-DBUSER="THEUSERNAME"
+DBNAME="YOURDBNAME"
+DBUSER="acmeadmin"
 DBPASSWORD="THEPASSWORD"
-DBSSLMODE="disable"
+DBSSLMODE="require"
 ```
 
-**Ask your tutor for the password**
+**Ask your tutor for the DB name and password**
 
 :exclamation: The Postgres server doesn't allow any old connection by default. You can either allow all public access (not recommended) or add your current IP address to the allow list. Click on the lin `+ Add current client IP address` to add your IP address to the allow list if it's not there.
 
@@ -76,13 +78,13 @@ When you run your code now, it will connect to the remote database and run any m
 To enable migrations to run from our image, we have to copy the `migrations` folder in our Dockerfile. Update your Dockerfile to do so:
 
 ```docker
-FROM golang:1.22.3-alpine3.19 AS build
+FROM golang:1.23.1-alpine3.19 AS build
 WORKDIR /app
 COPY . .
 COPY go.mod ./
 RUN go mod download && go mod verify
 RUN go build -o main .
-s
+
 WORKDIR /app
 COPY migrations /app/migrations
 
@@ -182,25 +184,20 @@ Update the Deploy stage to add the `env` step:
 
 ```yaml
 - stage: Deploy
-  displayName: 'Deploy to Azure Web App'
+  displayName: Deploy to Azure Web App
   dependsOn: Test
   jobs:
-  - job: Deploy
-    displayName: 'Deploy Azure Web App'
-    steps:
-    - task: AzureWebAppContainer@1
-      displayName: 'Azure Web App on Container Deploy'
-      inputs:
-        azureSubscription: $(azureSubscription)
-        appName: $(appName)
-        containers: $(containerRegistry)/$(imageRepository):$(tag)
-      env:
-        DBTYPE: $(DBTYPE)
-        DBHOST: $(DBHOST)
-        DBNAME: $(DBNAME)
-        DBUSER: $(DBUSER)
-        DBPASSWORD: $(DBPASSWORD)
-        DBSSLMODE: $(DBSSSLMODE)
+    - job: Deploy
+      displayName: Deploy Azure Web App
+      steps:
+        - task: AzureWebAppContainer@1
+          displayName: Azure Web App on Container Deploy
+          inputs:
+            azureSubscription: $(azureSubscription)
+            appName: $(appName)
+            containers: $(containerRegistry)/$(imageRepository):$(tag)
+            appSettings: -DBTYPE $(DBTYPE) -DBHOST $(DBHOST) -DBNAME $(DBNAME) -DBUSER
+              $(DBUSER) -DBPASSWORD $(DBPASSWORD) -DBSSLMODE $(DBSSLMODE)
 ```
 
 The first time you run this new pipeline it may require permission:
@@ -297,6 +294,8 @@ Now when you run your app locally, you will see the users returned
 ## Tasks
 
 Start by running locally. 
+
+> NOTE: If you are working in a team, you'll need to at this point decide how you are going to work together. The best way to do this would be to pick one person's codebase to be the *team* codebase and all branch off that, otherwise you'll forever be falling over each other creating slightly different tables.
 
 ### Task 1
 
