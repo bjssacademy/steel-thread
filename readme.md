@@ -49,6 +49,8 @@ So we need a remote Postgres database.
 ### Connect to our remote DB
 
 > If you don't have the code from previous tasks, you can use that in the [code-postgres](/code-postgres/) folder.
+>
+> Check out the [readme](./code-postgres/readme.md) on ho to set it up!
 
 You'll need to update your `.env` file:
 
@@ -56,12 +58,12 @@ You'll need to update your `.env` file:
 DBTYPE="postgres"
 DBHOST="acme-db.postgres.database.azure.com"
 DBNAME="acme"
-DBUSER="postgres"
+DBUSER="THEUSERNAME"
 DBPASSWORD="THEPASSWORD"
 DBSSLMODE="disable"
 ```
 
-**AAsk your tutor for the password**
+**Ask your tutor for the password**
 
 :exclamation: The Postgres server doesn't allow any old connection by default. You can either allow all public access (not recommended) or add your current IP address to the allow list. Click on the lin `+ Add current client IP address` to add your IP address to the allow list if it's not there.
 
